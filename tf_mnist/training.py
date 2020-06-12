@@ -77,14 +77,17 @@ def train(flags, sess, model, mnist):
             xs, ys = mnist.test.images, mnist.test.labels
             k = 1.0
         return {x: xs, y_: ys, keep_prob: k}
-
+    accuracies = []
     for i in range(flags.max_steps):
-
+        summary, acc = sess.run([merged, accuracy], feed_dict=feed_dict(False))
+        accuracies.append(acc.item())
         if i % 10 == 0:
             # Record summaries and test-set accuracy
-            summary, acc = sess.run([merged, accuracy], feed_dict=feed_dict(False))
+            average_accuracy = sum(accuracies) / 10
             test_writer.add_summary(summary, i)
+            print(json.dumps({'step': i, 'rolling_average': average_accuracy}))
             print(json.dumps({'step': i, 'accuracy': acc.item()}))
+            accuracies = []
         elif i % 100 == 99:  # Record train set summaries, and train
             run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
             run_metadata = tf.RunMetadata()
